@@ -1,2 +1,2 @@
 # winebot
-a content and collaborative filtering recommender that can make wine recommendations and pairings in an easy conversational style
+a content and collaborative filtering bot for recommendations and pairings in an easy conversational style
