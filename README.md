@@ -1,7 +1,7 @@
 # winebot
 a content and collaborative filtering bot for recommendations and pairings in an easy conversational style
 
-parameters
+# parameters
 gauth:
 provide your google api id from https://console.cloud.google.com. This is needed for sending requests through the api
 
