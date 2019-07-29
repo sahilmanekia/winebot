@@ -2,27 +2,27 @@
 a content and collaborative filtering bot for recommendations and pairings in an easy conversational style
 
 # parameters
-### gauth:
-provide your google api id from https://console.cloud.google.com. This is needed for sending requests through the api
+### config:
+spacy/rasa nlu pipeline
 
-### hospitals
-a dictionary that stores a list of addresses which we use as the origin point for the isochrome. It can be replaced by anything else
+### training_data
+a JSON dictionary of conversations in the rasa nlu pipeline used for training the chatbot 
 
-### drivetime: default 10]
-how far should the boundary be set from your origin point. Mode of transportis controlled separately, so the boundary will change for differnet modes
+### params: [default None ]
+a dictionary of parameters interpreted from the conversation/text input, and passed to the SQl backend
 
-### num_angs: [default 62]
-the number of points to map around the origin. Fewer points means the algorithm runs faster, but also creates more jagged features
+### alt_params: [default None]
+a supplemental dictionary of parameters activated when the original search fails to find any results. This partitions text to try to broaden the search within the supplied parameters
 
-### tolerance [default .9]
-the number of minutes that a test point can be away from duration to be considered acceptable
+### excluded [default None]
+search results that explicitly excluded from future results
 
-### maxits [default 10]
-the number of iterations to try to get to an acceptable solution.
-
-### alpha
-a learning rate that changes the size of each step in the algorithm. The closer the current distance, the smaller the step
+### message [default None]
+the user message which needs to be interpreted
 
 # dependencies
 ### Python packages
--geocoder -requests -time -pandas -math -simplejson, urllib.request -googlemaps -datetime
+-rasa_nlu(spacy) -rasa_core v0.9.6 -spacy -logging -io -json -warnings -pandas -mathplotlib -re -random -numpy -sqllite3 
+
+### Python models
+-en_core_web_md
