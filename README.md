@@ -1,6 +1,21 @@
 # winebot
 a content and collaborative filtering bot for recommendations and pairings in an easy conversational style
 
+# to run fork and download files to a project folder
+## Open a cmd or anaconda terminal and then start the actions server with
+python -m rasa_core_sdk.endpoint --actions actions
+
+## Open a cmd or anaconda terminal and then start the rasa session with
+### to interact and provide corrections
+rasa interactive 
+### to run in the shell
+rasa shell
+### to train model
+-rasa train
+-rasa train core
+-rasa train nlu
+
+
 # parameters
 ### config:
 spacy/rasa nlu pipeline
