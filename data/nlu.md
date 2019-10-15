@@ -612,7 +612,7 @@
 - hey good day are you there
 - hello
 - hello i remember you
-- hey there i'm [Sahil](name)
+- hey there i'm [Sahil](person)
 - hey it's [jessica](person)!
 - hi myself [sameer](person)
 - hello there this is [Rob](person)
@@ -620,7 +620,7 @@
 - Bro this is [Ameet Shah](person)
 - hey there this is [Rohan](person)
 - [Bob dylan](person) here - how the hell are you?
-- hello i'm [Sahil](person:sahil)
+- hello i'm [Sahil](person)
 
 ## intent:inform
 - I am not find a [white](condition) wine on this list
