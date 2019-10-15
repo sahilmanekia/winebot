@@ -573,49 +573,4 @@ class ActionSimilar ( Action ):
                         
             return []
         
-        
-            
-'''            wine_data[['designation_replace','variety','winery','province','country','description_replace']].iloc[wine_indices]
-
-'''        
-        
-        
-'''    
-from https://github.com/RasaHQ/rasa-sdk/blob/master/rasa_sdk/executor.py
-def utter_button_template(
-        self,
-        template: Text,
-        buttons: List[Dict[Text, Any]],
-        tracker: Tracker,
-        silent_fail: bool = False,
-        **kwargs: Any
-    ) -> None:
-        """Sends a message template with buttons to the output channel."""
-
-        message = {"template": template, "buttons": buttons}
-        message.update(kwargs)
-
-        self.messages.append(message)                    
-'''                    
-      
-
-class  ActionShowConcertReviews ( Action ):
     
-    def name(self):
-        return "action_show_concert_reviews"
-
-    def run(self, dispatcher, tracker, domain):
-        concerts = tracker.get_slot("concerts")
-        dispatcher.utter_message("concerts from slots: {}".format(concerts))
-        return []
-
-
-class  ActionShowVenueReviews ( Action ):
-    
-    def name(self):
-        return "action_show_venue_reviews"
-
-    def run(self, dispatcher, tracker, domain):
-        venues = tracker.get_slot("venues")
-        dispatcher.utter_message("venues from slots: {}".format(venues))
-        return []
