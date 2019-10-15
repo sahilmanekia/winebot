@@ -1,0 +1,88 @@
+%YAML 1.1
+---
+actions:
+- action_find_pair
+- action_greet_user
+- action_inform
+- action_negative
+- action_find_similar
+- utter_ask_food
+- utter_explain
+- utter_goodbye
+- utter_greet
+- utter_needhelp
+- utter_similar
+- utter_pair
+entities:
+- condition
+- food
+- location
+- name
+- person
+- variety
+intents:
+- inform
+- findSimilarList
+- greet
+- negative
+- findWinePair
+- bye
+- affirmative
+- describe
+slots:
+  winery:
+    type: text
+  condition:
+    type: text
+  exclude:
+    type: list
+  food:
+    type: text
+  location:
+    type: text
+  name:
+    type: text
+  neg_params:
+    type: unfeaturized
+  params:
+    type: unfeaturized
+  person:
+    type: text
+  prev_suggestions:
+    type: list
+  price:
+    max_value: 1.0
+    min_value: 0.0
+    type: float
+  state:
+    type: unfeaturized
+  variety:
+    type: text
+templates:
+  utter_ask_food:
+  - text: I'm sorry but I didn't catch that. Could you tell me what food you want
+      to pair a wine with? You could say 'find me a wine for chicken parmesan' or
+      something similar
+  utter_explain:
+  - text: I can help you find a wine to go with your meal, or suggest something you
+      will really like. To get started, just tell me what you're looking for.
+  utter_goodbye:
+  - text: Bye
+  - text: goodbye
+  - text: bye bye
+  utter_greet:
+  - text: Hey! How are you?
+  - text: Hello!
+  - text: Hey there {person}!
+  - text: Hi {person}!
+  utter_needhelp:
+  - text: do you need help with anything else?
+  utter_similar:
+  - text: I checked a few options for you. 
+  - text: how about one of these?
+  - text: based on what you liked before 
+  utter_pair:
+  - text: These are some options for you
+  - text: I think you could go for some of these
+  - text: I think these will go together really well
+  - text: Here are some ideas, but i've got a few more
