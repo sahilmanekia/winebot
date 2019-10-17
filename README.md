@@ -1,7 +1,9 @@
 # winebot
 a content and collaborative filtering bot for recommendations and pairings in an easy conversational style
 
-run fork and download files to a project folder
+run fork and download files to a project folder. 
+
+move data_
 
 ## 1 Open a cmd or anaconda terminal and then start the actions server with
 python -m rasa_core_sdk.endpoint --actions actions
