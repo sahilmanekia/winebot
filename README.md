@@ -3,10 +3,10 @@ a content and collaborative filtering bot for recommendations and pairings in an
 
 run fork and download files to a project folder
 
-## Open a cmd or anaconda terminal and then start the actions server with
+## 1 Open a cmd or anaconda terminal and then start the actions server with
 python -m rasa_core_sdk.endpoint --actions actions
 
-## Open a cmd or anaconda terminal and then start the rasa session 
+## 2 Open a cmd or anaconda terminal and then start the rasa session 
 ### to interact and provide corrections
 rasa interactive 
 ### to run in the shell
