@@ -3,7 +3,7 @@ a content and collaborative filtering bot for recommendations and pairings in an
 
 run fork and download files to a project folder. 
 
-move data_
+move lda_data out of the data folder and into the main directory, or otherwise change the relevant references in actions.py
 
 ## 1 Open a cmd or anaconda terminal and then start the actions server with
 python -m rasa_core_sdk.endpoint --actions actions
