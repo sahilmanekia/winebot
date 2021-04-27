@@ -1,0 +1,409 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Untitled5.ipynb",
+      "provenance": [],
+      "toc_visible": true,
+      "authorship_tag": "ABX9TyNLcp/QEddSS5lWL6wDNZTz",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/sahilmanekia/winebot/blob/master/store_recommendation\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "4N0votX5nits"
+      },
+      "source": [
+        "\n",
+        "# Create a recommender that takes in a query of parameters and outputs a list of closely matching results\n",
+        "\n",
+        "## Steps\n",
+        "1.   Upload data\n",
+        "2.   Cleaning \n",
+        "3.   Feature preprocessing\n",
+        "4.   Creating Candidate Embedding\n",
+        "5.   Building a Model\n",
+        "6.   Hyperparameters and validation\n",
+        "7.   Export final layer\n",
+        "\n",
+        "\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "0YooGKGXHzBG"
+      },
+      "source": [
+        "import numpy as np\n",
+        "import pandas as pd\n",
+        "import collections\n",
+        "import sklearn\n",
+        "import sklearn.manifold\n"
+      ],
+      "execution_count": 1,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "QdupnkfNRLGz"
+      },
+      "source": [
+        "# Add some convenience functions to Pandas DataFrame.\n",
+        "pd.options.display.max_rows = 10\n",
+        "pd.options.display.float_format = '{:.3f}'.format\n",
+        "def mask(df, key, function):\n",
+        "  \"\"\"Returns a filtered dataframe, by applying function to key\"\"\"\n",
+        "  return df[function(df[key])]\n",
+        "\n",
+        "def flatten_cols(df):\n",
+        "  df.columns = [' '.join(col).strip() for col in df.columns.values]\n",
+        "  return df\n",
+        "\n",
+        "pd.DataFrame.mask = mask\n",
+        "pd.DataFrame.flatten_cols = flatten_cols\n",
+        "\n"
+      ],
+      "execution_count": 2,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "YZ-Z1OOAx6iT",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "e5b4a371-389a-4839-d14b-857ce69d02ac"
+      },
+      "source": [
+        "# Upload data.\n",
+        "# This will trhow an error if you have not uploaded the file to sample_data or to session storage \n",
+        "print(\"Uploading data...\")\n",
+        "try:\n",
+        "  wine_pricelist = pd.read_csv('wine_pricelist_data.csv',index_col=0) \n",
+        "  #Error tokenising data. C error: EOF inside string starting at line.\n",
+        "  #winemag = pd.read_csv('winemag-countries.csv', engine ='python')\n",
+        "except:\n",
+        "  wine_pricelist = pd.read_csv('wine_pricelist_data.csv',engine ='python')\n",
+        "  #Error tokenising data. C error: EOF inside string starting at line.\n",
+        "  #winemag = pd.read_csv('winemag-countries.csv', engine ='python')\n",
+        "\n",
+        "print(\"Done.\")\n"
+      ],
+      "execution_count": 11,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Uploading data...\n",
+            "Done.\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 198
+        },
+        "id": "k-JDP0bZp3f4",
+        "outputId": "f5cce206-56fb-4f36-f73c-5fb50e5bd20c"
+      },
+      "source": [
+        "wine_pricelist=wine_pricelist.iloc[:,:-2]\n",
+        "wine_pricelist.head()"
+      ],
+      "execution_count": 12,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>name</th>\n",
+              "      <th>label</th>\n",
+              "      <th>region</th>\n",
+              "      <th>price_local</th>\n",
+              "      <th>price_usd</th>\n",
+              "      <th>price_range</th>\n",
+              "      <th>lat</th>\n",
+              "      <th>long</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>Penfolds Koonunga Hill Shiraz Cabernet</td>\n",
+              "      <td>Penfolds</td>\n",
+              "      <td>India</td>\n",
+              "      <td>2200.000</td>\n",
+              "      <td>25.000</td>\n",
+              "      <td>1.400</td>\n",
+              "      <td>18.976</td>\n",
+              "      <td>72.808</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>Penfolds Koonunga Hill Shiraz Cabernet</td>\n",
+              "      <td>Penfolds</td>\n",
+              "      <td>Australia</td>\n",
+              "      <td>20.000</td>\n",
+              "      <td>25.000</td>\n",
+              "      <td>1.000</td>\n",
+              "      <td>0.001</td>\n",
+              "      <td>0.001</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>PENFOLDS BIN 389 CABERNET SHIRAZ 75</td>\n",
+              "      <td>Penfolds</td>\n",
+              "      <td>India</td>\n",
+              "      <td>11750.000</td>\n",
+              "      <td>120.000</td>\n",
+              "      <td>7.300</td>\n",
+              "      <td>18.976</td>\n",
+              "      <td>72.808</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>HOPPER BLOND BEER 330ML</td>\n",
+              "      <td>Hopper Blond</td>\n",
+              "      <td>India</td>\n",
+              "      <td>280.000</td>\n",
+              "      <td>3.500</td>\n",
+              "      <td>0.200</td>\n",
+              "      <td>18.976</td>\n",
+              "      <td>72.808</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>BPDR SAUVIGNON BLANC 750ML</td>\n",
+              "      <td>Baron Philippe de Rothschild Mas Andes Sauvign...</td>\n",
+              "      <td>India</td>\n",
+              "      <td>1500.000</td>\n",
+              "      <td>15.000</td>\n",
+              "      <td>0.900</td>\n",
+              "      <td>18.976</td>\n",
+              "      <td>72.808</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "                                     name  ...   long\n",
+              "0  Penfolds Koonunga Hill Shiraz Cabernet  ... 72.808\n",
+              "1  Penfolds Koonunga Hill Shiraz Cabernet  ...  0.001\n",
+              "2     PENFOLDS BIN 389 CABERNET SHIRAZ 75  ... 72.808\n",
+              "3                 HOPPER BLOND BEER 330ML  ... 72.808\n",
+              "4              BPDR SAUVIGNON BLANC 750ML  ... 72.808\n",
+              "\n",
+              "[5 rows x 8 columns]"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 12
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "2E39I6iVcBmB",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 1000
+        },
+        "outputId": "5caa81bf-5bbc-462d-ef65-66ee425231ed"
+      },
+      "source": [
+        "print('Wine data set contains {} rows and {} columns'.format(*wine_pricelist.shape))\n",
+        "\n",
+        "print('\\nColumns with missing data')\n",
+        "print(wine_pricelist.isnull().sum())\n",
+        "\n",
+        "print('\\nFirst 5 rows')\n",
+        "print(wine_pricelist.head())\n",
+        "\n",
+        "print('\\nDistribution of Points and Price information ')\n",
+        "print(wine_pricelist.describe())\n",
+        "\n",
+        "print('\\nDistribution of Categorical data ')\n",
+        "wine_pricelist.describe(include=[np.object])\n",
+        "\n",
+        "wine_pricelist_dedup=wine_pricelist.drop_duplicates()\n",
+        "\n",
+        "print('\\nDuplicated rows ')\n",
+        "print(wine_pricelist[wine_pricelist.duplicated()].info())\n",
+        "\n",
+        "pd.DataFrame(wine_pricelist[wine_pricelist.duplicated()].sort_values(by=['label','region']).head(10))"
+      ],
+      "execution_count": 13,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Wine data set contains 84 rows and 8 columns\n",
+            "\n",
+            "Columns with missing data\n",
+            "name            1\n",
+            "label          19\n",
+            "region          1\n",
+            "price_local     0\n",
+            "price_usd      37\n",
+            "price_range     0\n",
+            "lat             0\n",
+            "long            0\n",
+            "dtype: int64\n",
+            "\n",
+            "First 5 rows\n",
+            "                                     name  ...   long\n",
+            "0  Penfolds Koonunga Hill Shiraz Cabernet  ... 72.808\n",
+            "1  Penfolds Koonunga Hill Shiraz Cabernet  ...  0.001\n",
+            "2     PENFOLDS BIN 389 CABERNET SHIRAZ 75  ... 72.808\n",
+            "3                 HOPPER BLOND BEER 330ML  ... 72.808\n",
+            "4              BPDR SAUVIGNON BLANC 750ML  ... 72.808\n",
+            "\n",
+            "[5 rows x 8 columns]\n",
+            "\n",
+            "Distribution of Points and Price information \n",
+            "       price_local  price_usd  price_range    lat    long\n",
+            "count       84.000     47.000       84.000 84.000  84.000\n",
+            "mean      1464.938     21.638        0.985 25.177  66.130\n",
+            "std       1601.222     25.211        0.972  8.459  32.150\n",
+            "min          0.001      0.001        0.000  0.001 -73.982\n",
+            "25%        838.750     10.000        0.600 18.976  72.808\n",
+            "50%       1300.000     13.000        0.850 28.628  77.145\n",
+            "75%       1582.500     22.500        1.000 28.628  77.145\n",
+            "max      11750.000    120.000        7.300 53.075  78.429\n",
+            "\n",
+            "Distribution of Categorical data \n",
+            "\n",
+            "Duplicated rows \n",
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "Int64Index: 1 entries, 79 to 79\n",
+            "Data columns (total 8 columns):\n",
+            " #   Column       Non-Null Count  Dtype  \n",
+            "---  ------       --------------  -----  \n",
+            " 0   name         1 non-null      object \n",
+            " 1   label        1 non-null      object \n",
+            " 2   region       1 non-null      object \n",
+            " 3   price_local  1 non-null      float64\n",
+            " 4   price_usd    1 non-null      float64\n",
+            " 5   price_range  1 non-null      float64\n",
+            " 6   lat          1 non-null      float64\n",
+            " 7   long         1 non-null      float64\n",
+            "dtypes: float64(5), object(3)\n",
+            "memory usage: 72.0+ bytes\n",
+            "None\n"
+          ],
+          "name": "stdout"
+        },
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>name</th>\n",
+              "      <th>label</th>\n",
+              "      <th>region</th>\n",
+              "      <th>price_local</th>\n",
+              "      <th>price_usd</th>\n",
+              "      <th>price_range</th>\n",
+              "      <th>lat</th>\n",
+              "      <th>long</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>79</th>\n",
+              "      <td>MARTINI PROSECCO</td>\n",
+              "      <td>Martini</td>\n",
+              "      <td>India</td>\n",
+              "      <td>1580.000</td>\n",
+              "      <td>32.000</td>\n",
+              "      <td>1.000</td>\n",
+              "      <td>28.628</td>\n",
+              "      <td>77.145</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>"
+            ],
+            "text/plain": [
+              "                name    label region  ...  price_range    lat   long\n",
+              "79  MARTINI PROSECCO  Martini  India  ...        1.000 28.628 77.145\n",
+              "\n",
+              "[1 rows x 8 columns]"
+            ]
+          },
+          "metadata": {
+            "tags": []
+          },
+          "execution_count": 13
+        }
+      ]
+    }
+  ]
+}
